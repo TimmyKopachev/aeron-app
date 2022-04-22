@@ -1,0 +1,14 @@
+server:
+  port: 8082
+
+aeron:
+  connection:
+    nodes:
+      trade-processor:
+        timeout: 2000
+        channel: aeron:udp?endpoint=localhost:8090
+        streamID: 111
+
+#      stock-quotes:
+#        channel: aeron:udp?endpoint=localhost:8040
+#        streamID: 70
