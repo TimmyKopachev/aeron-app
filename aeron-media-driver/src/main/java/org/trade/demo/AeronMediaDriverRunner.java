@@ -1,6 +1,9 @@
 package org.trade.demo;
 
 import io.aeron.driver.MediaDriver;
+import io.aeron.driver.ThreadingMode;
+import org.agrona.concurrent.BusySpinIdleStrategy;
+import org.agrona.concurrent.NoOpIdleStrategy;
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -21,11 +24,18 @@ public class AeronMediaDriverRunner implements ApplicationRunner {
   @Override
   public void run(ApplicationArguments args) throws Exception {
     final ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
-    final MediaDriver.Context context = new MediaDriver.Context();
+    final MediaDriver.Context context =
+        new MediaDriver.Context()
+            .dirDeleteOnStart(true)
+            .threadingMode(ThreadingMode.DEDICATED)
+            .conductorIdleStrategy(new BusySpinIdleStrategy())
+            .senderIdleStrategy(new NoOpIdleStrategy())
+            .receiverIdleStrategy(new NoOpIdleStrategy())
+            .dirDeleteOnShutdown(true);
 
     context.terminationHook(barrier::signal);
 
-    try (MediaDriver mediaDriver = MediaDriver.launch(context)) {
+    try (MediaDriver mediaDriver = MediaDriver.launchEmbedded(context)) {
       barrier.await();
     }
   }
